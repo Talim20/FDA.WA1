@@ -1,0 +1,10 @@
+{
+    "name": "imsts/fda-surveillance",
+    "description": "Integrated Market Surveillance Tracking System",
+    "type": "project",
+    "require": {
+        "ext-pdo": "*",
+        "ext-pdo-pgsql": "*"
+    },
+    "license": "MIT"
+}

@@ -4,23 +4,48 @@
  * IMSTS - Integrated Market Surveillance Tracking System
  */
 
-// Database configuration
-define('DB_HOST', 'localhost');
-define('DB_NAME', 'imsts_db');
-define('DB_USER', 'root');
-define('DB_PASS', '');
-define('DB_CHARSET', 'utf8mb4');
+// Check for Render PostgreSQL database URL
+$databaseUrl = getenv('DATABASE_URL');
+
+if ($databaseUrl) {
+    // Parse PostgreSQL connection string from Render
+    $parsedUrl = parse_url($databaseUrl);
+    $dbHost = $parsedUrl['host'];
+    $dbPort = $parsedUrl['port'] ?? 5432;
+    $dbName = ltrim($parsedUrl['path'], '/');
+    $dbUser = $parsedUrl['user'];
+    $dbPass = $parsedUrl['pass'];
+    $dbType = 'pgsql';
+} else {
+    // Local development configuration (MySQL)
+    $dbType = 'mysql';
+    $dbHost = 'localhost';
+    $dbName = 'imsts_db';
+    $dbUser = 'root';
+    $dbPass = '';
+    $dbPort = 3306;
+}
 
 try {
-    // Create PDO connection
-    $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=" . DB_CHARSET;
-    $options = [
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
-        PDO::ATTR_EMULATE_PREPARES => false,
-    ];
-    
-    $pdo = new PDO($dsn, DB_USER, DB_PASS, $options);
+    // Create PDO connection based on database type
+    if ($dbType === 'pgsql') {
+        $dsn = "pgsql:host=$dbHost;port=$dbPort;dbname=$dbName";
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ];
+        $pdo = new PDO($dsn, $dbUser, $dbPass, $options);
+    } else {
+        // MySQL for local development
+        $dsn = "mysql:host=$dbHost;port=$dbPort;dbname=$dbName;charset=utf8mb4";
+        $options = [
+            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+            PDO::ATTR_EMULATE_PREPARES => false,
+        ];
+        $pdo = new PDO($dsn, $dbUser, $dbPass, $options);
+    }
     
 } catch (PDOException $e) {
     // Log error and display user-friendly message
